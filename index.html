@@ -14,7 +14,6 @@
       touch-action: manipulation;
     }
 
-    /* ========== 动画舞台 ========== */
     #stage {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: black;
@@ -22,17 +21,24 @@
       z-index: 100;
       transition: background 0.8s ease;
     }
-    .fade-text {
+
+    .fullscreen-text {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
       color: white;
-      font-size: clamp(1.8rem, 6vw, 2.8rem);
+      font-size: clamp(2.5rem, 8vw, 4rem);
       font-weight: 300;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.15em;
       opacity: 0;
-      margin: 0.6rem 0;
-      transition: opacity 1.2s ease;
-      text-shadow: 0 0 10px rgba(255,255,255,0.5);
+      transition: opacity 1s ease;
+      text-shadow: 0 0 20px rgba(255,255,255,0.5);
       pointer-events: none;
+      white-space: nowrap;
+      text-align: center;
+      width: 100%;
     }
+
     #crazy-circle {
       position: absolute;
       width: 60px; height: 60px;
@@ -111,7 +117,7 @@
       text-decoration: underline;
     }
 
-    /* ========== 微信风格聊天主界面 ========== */
+    /* 微信风格聊天主界面 */
     #chat-app {
       display: none;
       width: 100%; height: 100%;
@@ -135,7 +141,6 @@
       overflow: hidden;
       position: relative;
     }
-    /* 侧边栏（微信会话列表风格） */
     .sidebar {
       width: 260px;
       background: #f7f7f7;
@@ -252,7 +257,6 @@
       outline: none;
       font-size: 0.95rem;
     }
-    /* 个人设置面板 */
     .profile-panel {
       position: fixed;
       right: 0; top: 0;
@@ -288,30 +292,23 @@
   </style>
 </head>
 <body>
-  <!-- ========== 动画/登录阶段 ========== -->
   <div id="stage">
-    <div id="text1" class="fade-text">你好</div>
-    <div id="text2" class="fade-text">欢迎你加入我们</div>
-    <div id="text3" class="fade-text">从现在起</div>
-    <div id="text4" class="fade-text">我们就是自己人了</div>
+    <div id="fullscreenText" class="fullscreen-text"></div>
     <div id="crazy-circle"></div>
     <div id="colorTitle">从这里开始吧</div>
     <div id="login-section">
-      <!-- 登录表单 -->
       <div id="loginForm" style="width:100%; display:flex; flex-direction:column; align-items:center;">
         <input type="text" id="loginUsername" class="input-field" placeholder="用户名" autocomplete="off">
         <input type="password" id="loginPassword" class="input-field" placeholder="密码">
         <button id="loginBtn" class="btn">登录</button>
         <span class="link-text" id="goRegisterBtn">没有账号？立刻注册</span>
       </div>
-      <!-- 注册表单 -->
       <div id="registerForm" style="width:100%; display:none; flex-direction:column; align-items:center;">
         <input type="text" id="regUsername" class="input-field" placeholder="设置用户名">
         <input type="password" id="regPassword" class="input-field" placeholder="设置密码">
         <button id="registerBtn" class="btn">注册</button>
         <span class="link-text" id="goLoginBtn">← 返回登录</span>
       </div>
-      <!-- 设置昵称 -->
       <div id="nameSetup" style="width:100%; display:none; flex-direction:column; align-items:center;">
         <div id="typingContainer" style="color:#333; font-size:1.3rem; min-height:2.2rem; margin-bottom:1rem; font-weight:500;"></div>
         <input type="text" id="nicknameInput" class="input-field" placeholder="输入你的昵称" style="display:none;">
@@ -320,7 +317,6 @@
     </div>
   </div>
 
-  <!-- ========== 微信聊天主界面 ========== -->
   <div id="chat-app">
     <div class="chat-header">
       <button class="menu-btn" id="menuBtn">☰</button>
@@ -351,7 +347,6 @@
     </div>
   </div>
 
-  <!-- 个人设置面板 -->
   <div id="profilePanel" class="profile-panel">
     <h3>账号管理</h3>
     <input type="text" id="editNickname" class="input-field" placeholder="昵称">
@@ -364,7 +359,8 @@
 
   <script>
     (function() {
-      const WS_URL = 'ws://localhost:8080';
+      // ★★★ 这里已经换成你的 Railway 域名 ★★★
+      const WS_URL = 'wss://circus-production-8c6f.up.railway.app';
       let ws;
       let currentUser = null;
       let currentChat = { type: 'group', id: 'public', name: '大厅' };
@@ -372,42 +368,36 @@
       let groups = [{ id: 'public', name: '大厅', members: [] }];
       let messagesCache = {};
 
-      // 录音
       let mediaRecorder, audioChunks = [], recording = false, recordTimer;
 
-      // ---------- 动画引擎 ----------
+      // ---------- 动画：每句独占全屏，淡入→停留→淡出 ----------
       async function runAnimation() {
-        const stage = document.getElementById('stage');
-        const text1 = document.getElementById('text1');
-        const text2 = document.getElementById('text2');
-        const text3 = document.getElementById('text3');
-        const text4 = document.getElementById('text4');
+        const fullText = document.getElementById('fullscreenText');
         const circle = document.getElementById('crazy-circle');
         const colorTitle = document.getElementById('colorTitle');
         const loginSection = document.getElementById('login-section');
+        const stage = document.getElementById('stage');
 
-        function fadeIn(el, delay = 0) {
-          return new Promise(resolve => {
-            setTimeout(() => { el.style.opacity = '1'; resolve(); }, delay);
-          });
+        const sentences = ["你好", "欢迎你加入我们", "从现在起", "我们就是自己人了"];
+
+        for (let i = 0; i < sentences.length; i++) {
+          fullText.textContent = sentences[i];
+          // 淡入
+          fullText.style.opacity = '1';
+          await new Promise(r => setTimeout(r, 1500));  // 停留 1.5 秒
+          // 淡出
+          fullText.style.opacity = '0';
+          await new Promise(r => setTimeout(r, 800));   // 消失间隙
         }
 
-        await fadeIn(text1, 400);
-        await new Promise(r => setTimeout(r, 1200));
-        await fadeIn(text2, 200);
-        await new Promise(r => setTimeout(r, 1200));
-        await fadeIn(text3, 200);
-        await new Promise(r => setTimeout(r, 1200));
-        await fadeIn(text4, 200);
-        await new Promise(r => setTimeout(r, 1500));
-
+        // 白色圆出现并碰撞四角
         circle.style.opacity = '1';
         await new Promise(r => setTimeout(r, 300));
 
         const stageRect = stage.getBoundingClientRect();
         const w = stageRect.width, h = stageRect.height;
         const size = 60;
-        let x = (w-size)/2, y = (h-size)/2;
+        let x = (w - size) / 2, y = (h - size) / 2;
         let dx = 10, dy = 7;
         const corners = new Set();
 
@@ -481,7 +471,6 @@
 
       function send(data) { if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(data)); }
 
-      // UI 切换
       function showLoginForm() {
         document.getElementById('loginForm').style.display = 'flex';
         document.getElementById('registerForm').style.display = 'none';
@@ -508,7 +497,6 @@
       document.getElementById('goRegisterBtn').onclick = showRegisterForm;
       document.getElementById('goLoginBtn').onclick = showLoginForm;
 
-      // 登录后设置昵称
       function proceedAfterLogin() {
         document.getElementById('loginForm').style.display = 'none';
         document.getElementById('registerForm').style.display = 'none';
@@ -558,9 +546,7 @@
         currentChat = { id: chatId, name: chatName, type };
         document.getElementById('messagesContainer').innerHTML = '';
         if (messagesCache[chatId]) renderMessages();
-        // 高亮
         document.querySelectorAll('.contact-item, .group-item').forEach(el => el.classList.remove('active-chat'));
-        // 移动端关闭侧边栏
         document.getElementById('sidebar').classList.remove('open');
       };
 
@@ -571,7 +557,7 @@
         msgs.forEach(m => {
           const div = document.createElement('div');
           div.className = `message ${m.from === currentUser.username ? 'mine' : 'others'}`;
-          if (m.type === 'text' || !m.imageData && !m.audioData) {
+          if (m.type === 'text' || (!m.imageData && !m.audioData)) {
             div.innerHTML = `<div class="msg-bubble"><b>${m.nickname||m.from}</b>: ${m.text || ''}</div>`;
           } else if (m.imageData) {
             div.innerHTML = `<div class="msg-bubble"><b>${m.nickname||m.from}</b>:<br><img src="${m.imageData}" class="msg-img" onclick="window.open('${m.imageData}')"/></div>`;
@@ -583,7 +569,6 @@
         container.scrollTop = container.scrollHeight;
       }
 
-      // 发送文字
       document.getElementById('sendBtn').onclick = sendText;
       document.getElementById('chatInput').onkeypress = (e) => { if (e.key==='Enter') sendText(); };
       function sendText() {
@@ -594,7 +579,6 @@
         input.value = '';
       }
 
-      // 图片压缩上传
       document.getElementById('uploadImgBtn').onclick = () => document.getElementById('imageInput').click();
       document.getElementById('imageInput').onchange = (e) => {
         const file = e.target.files[0];
@@ -623,7 +607,6 @@
         reader.readAsDataURL(file);
       }
 
-      // 语音录制
       document.getElementById('recordBtn').onclick = async () => {
         if (!recording) {
           try {
@@ -652,7 +635,6 @@
         }
       };
 
-      // 好友/群组渲染
       function renderContacts() {
         const list = document.getElementById('contactsList');
         list.innerHTML = '';
@@ -684,13 +666,10 @@
         const name = prompt('输入群名称:');
         if (name) send({ type: 'createGroup', groupName: name });
       };
-
-      // 侧边栏移动端汉堡菜单
       document.getElementById('menuBtn').onclick = () => {
         document.getElementById('sidebar').classList.toggle('open');
       };
 
-      // 个人面板
       const profilePanel = document.getElementById('profilePanel');
       document.getElementById('profileBtn').onclick = () => {
         document.getElementById('editNickname').value = currentUser?.nickname || '';
