@@ -117,7 +117,6 @@
       text-decoration: underline;
     }
 
-    /* 微信风格聊天主界面 */
     #chat-app {
       display: none;
       width: 100%; height: 100%;
@@ -248,6 +247,14 @@
       padding: 0.2rem 0.4rem;
       color: #555;
     }
+    .icon-btn.recording {
+      color: red;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
     .chat-input {
       flex: 1;
       padding: 0.5rem 0.8rem;
@@ -292,6 +299,7 @@
   </style>
 </head>
 <body>
+  <!-- ========== 动画/登录阶段 ========== -->
   <div id="stage">
     <div id="fullscreenText" class="fullscreen-text"></div>
     <div id="crazy-circle"></div>
@@ -317,6 +325,7 @@
     </div>
   </div>
 
+  <!-- ========== 微信聊天主界面 ========== -->
   <div id="chat-app">
     <div class="chat-header">
       <button class="menu-btn" id="menuBtn">☰</button>
@@ -347,6 +356,7 @@
     </div>
   </div>
 
+  <!-- ========== 个人设置面板 ========== -->
   <div id="profilePanel" class="profile-panel">
     <h3>账号管理</h3>
     <input type="text" id="editNickname" class="input-field" placeholder="昵称">
@@ -359,7 +369,7 @@
 
   <script>
     (function() {
-      // ★★★ 这里已经换成你的 Railway 域名 ★★★
+      // ★★★ 你的 Railway 域名 ★★★
       const WS_URL = 'wss://circus-production-8c6f.up.railway.app';
       let ws;
       let currentUser = null;
@@ -368,9 +378,14 @@
       let groups = [{ id: 'public', name: '大厅', members: [] }];
       let messagesCache = {};
 
-      let mediaRecorder, audioChunks = [], recording = false, recordTimer;
+      // ========== 录音 ==========
+      let mediaRecorder = null;
+      let audioChunks = [];
+      let recording = false;
+      let recordTimer = null;
+      let audioStream = null;
 
-      // ---------- 动画：每句独占全屏，淡入→停留→淡出 ----------
+      // ========== 动画引擎 ==========
       async function runAnimation() {
         const fullText = document.getElementById('fullscreenText');
         const circle = document.getElementById('crazy-circle');
@@ -382,15 +397,12 @@
 
         for (let i = 0; i < sentences.length; i++) {
           fullText.textContent = sentences[i];
-          // 淡入
           fullText.style.opacity = '1';
-          await new Promise(r => setTimeout(r, 1500));  // 停留 1.5 秒
-          // 淡出
+          await new Promise(r => setTimeout(r, 1500));
           fullText.style.opacity = '0';
-          await new Promise(r => setTimeout(r, 800));   // 消失间隙
+          await new Promise(r => setTimeout(r, 800));
         }
 
-        // 白色圆出现并碰撞四角
         circle.style.opacity = '1';
         await new Promise(r => setTimeout(r, 300));
 
@@ -433,16 +445,20 @@
         });
       }
 
-      // ---------- WebSocket ----------
+      // ========== WebSocket ==========
       function connectWS() {
         ws = new WebSocket(WS_URL);
         ws.onopen = () => {
+          console.log('WebSocket 已连接');
           if (currentUser) ws.send(JSON.stringify({ type: 'auth', user: currentUser }));
         };
         ws.onmessage = (e) => {
           try { handleMessage(JSON.parse(e.data)); } catch (err) {}
         };
-        ws.onclose = () => setTimeout(connectWS, 2000);
+        ws.onclose = () => {
+          console.log('WebSocket 断开，2秒后重连');
+          setTimeout(connectWS, 2000);
+        };
       }
 
       function handleMessage(msg) {
@@ -452,8 +468,12 @@
         } else if (msg.type === 'registerSuccess') {
           alert('注册成功！请登录。');
           showLoginForm();
-        } else if (msg.type === 'error') alert(msg.msg);
-        else if (msg.type === 'message') {
+        } else if (msg.type === 'error') {
+          alert(msg.msg);
+        } else if (msg.type === 'history') {
+          messagesCache[msg.chatId] = msg.messages || [];
+          if (currentChat.id === msg.chatId) renderMessages();
+        } else if (msg.type === 'message') {
           const chatId = msg.chatId || 'public';
           if (!messagesCache[chatId]) messagesCache[chatId] = [];
           messagesCache[chatId].push(msg);
@@ -465,12 +485,19 @@
           groups = msg.groups || [{ id: 'public', name: '大厅' }];
           renderGroups();
         } else if (msg.type === 'userUpdate') {
-          if (currentUser && msg.user.username === currentUser.username) currentUser = msg.user;
+          if (currentUser && msg.user.username === currentUser.username) {
+            currentUser = msg.user;
+          }
         }
       }
 
-      function send(data) { if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(data)); }
+      function send(data) {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify(data));
+        }
+      }
 
+      // UI 切换
       function showLoginForm() {
         document.getElementById('loginForm').style.display = 'flex';
         document.getElementById('registerForm').style.display = 'none';
@@ -545,7 +572,11 @@
       window.switchChat = function(chatId, chatName, type = 'group') {
         currentChat = { id: chatId, name: chatName, type };
         document.getElementById('messagesContainer').innerHTML = '';
-        if (messagesCache[chatId]) renderMessages();
+        if (messagesCache[chatId]) {
+          renderMessages();
+        } else {
+          send({ type: 'getHistory', chatId });
+        }
         document.querySelectorAll('.contact-item, .group-item').forEach(el => el.classList.remove('active-chat'));
         document.getElementById('sidebar').classList.remove('open');
       };
@@ -557,11 +588,11 @@
         msgs.forEach(m => {
           const div = document.createElement('div');
           div.className = `message ${m.from === currentUser.username ? 'mine' : 'others'}`;
-          if (m.type === 'text' || (!m.imageData && !m.audioData)) {
+          if (m.msgType === 'text' || (!m.imageData && !m.audioData)) {
             div.innerHTML = `<div class="msg-bubble"><b>${m.nickname||m.from}</b>: ${m.text || ''}</div>`;
-          } else if (m.imageData) {
+          } else if (m.msgType === 'image' || m.imageData) {
             div.innerHTML = `<div class="msg-bubble"><b>${m.nickname||m.from}</b>:<br><img src="${m.imageData}" class="msg-img" onclick="window.open('${m.imageData}')"/></div>`;
-          } else if (m.audioData) {
+          } else if (m.msgType === 'audio' || m.audioData) {
             div.innerHTML = `<div class="msg-bubble"><b>${m.nickname||m.from}</b>:<br><audio controls src="${m.audioData}"></audio></div>`;
           }
           container.appendChild(div);
@@ -569,8 +600,9 @@
         container.scrollTop = container.scrollHeight;
       }
 
+      // 发送文字
       document.getElementById('sendBtn').onclick = sendText;
-      document.getElementById('chatInput').onkeypress = (e) => { if (e.key==='Enter') sendText(); };
+      document.getElementById('chatInput').onkeypress = (e) => { if (e.key === 'Enter') sendText(); };
       function sendText() {
         const input = document.getElementById('chatInput');
         const text = input.value.trim();
@@ -579,13 +611,16 @@
         input.value = '';
       }
 
+      // 图片上传
       document.getElementById('uploadImgBtn').onclick = () => document.getElementById('imageInput').click();
       document.getElementById('imageInput').onchange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
         compressImage(file, 800, 0.7, blob => {
           const reader = new FileReader();
-          reader.onload = () => send({ type: 'message', chatId: currentChat.id, imageData: reader.result, from: currentUser.username, nickname: currentUser.nickname });
+          reader.onload = () => {
+            send({ type: 'message', chatId: currentChat.id, imageData: reader.result, from: currentUser.username, nickname: currentUser.nickname });
+          };
           reader.readAsDataURL(blob);
         });
         e.target.value = '';
@@ -597,7 +632,7 @@
           img.onload = () => {
             const canvas = document.createElement('canvas');
             let w = img.width, h = img.height;
-            if (w > maxW) { h *= maxW/w; w = maxW; }
+            if (w > maxW) { h *= maxW / w; w = maxW; }
             canvas.width = w; canvas.height = h;
             canvas.getContext('2d').drawImage(img, 0, 0, w, h);
             canvas.toBlob(cb, 'image/jpeg', quality);
@@ -607,34 +642,135 @@
         reader.readAsDataURL(file);
       }
 
+      // ========== ★★★ 录音（修复版） ★★★ ==========
       document.getElementById('recordBtn').onclick = async () => {
+        const btn = document.getElementById('recordBtn');
+
         if (!recording) {
+          // 开始录音
           try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
+            console.log('🎤 请求麦克风权限...');
+            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            console.log('✅ 麦克风权限已获取');
+
+            // 检查支持的 MIME 类型
+            let mimeType = 'audio/webm';
+            if (!MediaRecorder.isTypeSupported('audio/webm')) {
+              if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                mimeType = 'audio/mp4';
+              } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
+                mimeType = 'audio/ogg';
+              }
+            }
+            console.log('📼 使用 MIME 类型:', mimeType);
+
+            mediaRecorder = new MediaRecorder(audioStream, {
+              mimeType: mimeType,
+              audioBitsPerSecond: 64000
+            });
+
             audioChunks = [];
-            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-            mediaRecorder.onstop = () => {
-              const blob = new Blob(audioChunks, { type: 'audio/webm' });
-              const reader = new FileReader();
-              reader.onload = () => send({ type: 'message', chatId: currentChat.id, audioData: reader.result, from: currentUser.username, nickname: currentUser.nickname });
-              reader.readAsDataURL(blob);
-              stream.getTracks().forEach(t => t.stop());
+
+            mediaRecorder.ondataavailable = (e) => {
+              if (e.data.size > 0) {
+                audioChunks.push(e.data);
+                console.log('📦 音频数据块:', e.data.size, 'bytes');
+              }
             };
-            mediaRecorder.start();
+
+            mediaRecorder.onstart = () => {
+              console.log('🔴 录音开始');
+            };
+
+            mediaRecorder.onstop = () => {
+              console.log('⏹️ 录音停止，数据块数量:', audioChunks.length);
+
+              if (audioChunks.length === 0) {
+                alert('录音数据为空，请重试');
+                return;
+              }
+
+              const blob = new Blob(audioChunks, { type: mimeType });
+              console.log('📁 录音文件大小:', blob.size, 'bytes');
+
+              const reader = new FileReader();
+              reader.onload = () => {
+                console.log('📤 发送录音数据...');
+                send({
+                  type: 'message',
+                  chatId: currentChat.id,
+                  audioData: reader.result,
+                  from: currentUser.username,
+                  nickname: currentUser.nickname
+                });
+              };
+              reader.onerror = () => {
+                console.error('读取录音文件失败');
+                alert('录音处理失败，请重试');
+              };
+              reader.readAsDataURL(blob);
+
+              // 释放麦克风
+              if (audioStream) {
+                audioStream.getTracks().forEach(track => track.stop());
+                audioStream = null;
+              }
+            };
+
+            mediaRecorder.onerror = (err) => {
+              console.error('MediaRecorder 错误:', err);
+              alert('录音失败: ' + err.message);
+              stopRecordingUI();
+            };
+
+            // 开始录制
+            mediaRecorder.start(100); // 每 100ms 收集一次数据
             recording = true;
-            document.getElementById('recordBtn').textContent = '⏹️';
+            btn.textContent = '⏹️';
+            btn.classList.add('recording');
+            console.log('🎙️ 录音中...');
+
+            // 40 秒自动停止
             recordTimer = setTimeout(() => {
-              if (recording) { mediaRecorder.stop(); recording = false; document.getElementById('recordBtn').textContent = '🎤'; }
+              if (recording && mediaRecorder && mediaRecorder.state === 'recording') {
+                console.log('⏰ 40秒限制，自动停止');
+                mediaRecorder.stop();
+                recording = false;
+                btn.textContent = '🎤';
+                btn.classList.remove('recording');
+                clearTimeout(recordTimer);
+              }
             }, 40000);
-          } catch (err) { alert('无法访问麦克风'); }
+
+          } catch (err) {
+            console.error('获取麦克风失败:', err);
+            if (err.name === 'NotAllowedError') {
+              alert('麦克风权限被拒绝，请在浏览器设置中允许访问麦克风');
+            } else if (err.name === 'NotFoundError') {
+              alert('未检测到麦克风设备');
+            } else {
+              alert('无法访问麦克风: ' + err.message);
+            }
+            stopRecordingUI();
+          }
         } else {
-          mediaRecorder.stop(); recording = false;
-          clearTimeout(recordTimer);
-          document.getElementById('recordBtn').textContent = '🎤';
+          // 停止录音
+          console.log('🛑 手动停止录音');
+          if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+          }
+          stopRecordingUI();
         }
       };
 
+      function stopRecordingUI() {
+        recording = false;
+        if (recordTimer) clearTimeout(recordTimer);
+        document.getElementById('recordBtn').textContent = '🎤';
+        document.getElementById('recordBtn').classList.remove('recording');
+      }
+
+      // 好友/群组渲染
       function renderContacts() {
         const list = document.getElementById('contactsList');
         list.innerHTML = '';
@@ -670,6 +806,7 @@
         document.getElementById('sidebar').classList.toggle('open');
       };
 
+      // 个人面板
       const profilePanel = document.getElementById('profilePanel');
       document.getElementById('profileBtn').onclick = () => {
         document.getElementById('editNickname').value = currentUser?.nickname || '';
