@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>马戏团群成员管理系统</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body, html {
+      width: 100%; height: 100%;
+      background: #000;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+
+    /* ========== 动画舞台 ========== */
+    #stage {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: black;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 100;
+      transition: background 0.8s ease;
+    }
+    .fade-text {
+      color: white;
+      font-size: clamp(1.8rem, 6vw, 2.8rem);
+      font-weight: 300;
+      letter-spacing: 0.12em;
+      opacity: 0;
+      margin: 0.6rem 0;
+      transition: opacity 1.2s ease;
+      text-shadow: 0 0 10px rgba(255,255,255,0.5);
+      pointer-events: none;
+    }
+    #crazy-circle {
+      position: absolute;
+      width: 60px; height: 60px;
+      background: white;
+      border-radius: 50%;
+      opacity: 0;
+      box-shadow: 0 0 30px white;
+      pointer-events: none;
+      z-index: 10;
+    }
+    #colorTitle {
+      font-size: clamp(2rem, 7vw, 3rem);
+      font-weight: 800;
+      background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 12px rgba(255,255,255,0.5));
+      transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+      text-align: center;
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    #login-section {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 90%;
+      max-width: 360px;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 2rem 1.2rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+      z-index: 20;
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .input-field {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      margin: 0.5rem 0;
+      border-radius: 12px;
+      border: 1px solid #ddd;
+      background: #f5f5f5;
+      color: #333;
+      font-size: 1rem;
+      outline: none;
+    }
+    .input-field::placeholder { color: #999; }
+    .btn {
+      background: #07c160;
+      color: white;
+      font-weight: 600;
+      padding: 0.8rem 2rem;
+      border-radius: 12px;
+      border: none;
+      margin-top: 1rem;
+      cursor: pointer;
+      font-size: 1rem;
+      width: 100%;
+      transition: 0.2s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .link-text {
+      color: #333;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    /* ========== 微信风格聊天主界面 ========== */
+    #chat-app {
+      display: none;
+      width: 100%; height: 100%;
+      background: #ededed;
+      flex-direction: column;
+      position: fixed; top: 0; left: 0; z-index: 200;
+    }
+    .chat-header {
+      background: #ededed;
+      padding: 0.8rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #d9d9d9;
+      color: #000;
+      font-weight: 500;
+    }
+    .chat-body {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+    /* 侧边栏（微信会话列表风格） */
+    .sidebar {
+      width: 260px;
+      background: #f7f7f7;
+      border-right: 1px solid #d9d9d9;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      transition: transform 0.25s ease;
+    }
+    @media (max-width: 600px) {
+      .sidebar {
+        position: absolute;
+        left: 0; top: 0; bottom: 0;
+        z-index: 10;
+        transform: translateX(-100%);
+        width: 80%;
+        max-width: 280px;
+      }
+      .sidebar.open { transform: translateX(0); }
+    }
+    .sidebar h4 {
+      padding: 0.8rem 1rem 0.3rem;
+      color: #666;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+    }
+    .contact-item, .group-item {
+      padding: 0.8rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      cursor: pointer;
+      border-bottom: 1px solid #e6e6e6;
+      transition: background 0.1s;
+    }
+    .contact-item:active, .group-item:active { background: #d9d9d9; }
+    .active-chat { background: #cacaca; }
+    .contact-avatar {
+      width: 40px; height: 40px;
+      border-radius: 4px;
+      background: #ccc;
+      background-size: cover;
+      background-position: center;
+    }
+    .chat-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #ededed;
+    }
+    .messages {
+      flex: 1;
+      padding: 0.8rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+    .message {
+      display: flex;
+      flex-direction: column;
+      max-width: 75%;
+    }
+    .mine { align-self: flex-end; align-items: flex-end; }
+    .others { align-self: flex-start; }
+    .msg-bubble {
+      padding: 0.6rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      position: relative;
+      word-wrap: break-word;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    }
+    .mine .msg-bubble {
+      background: #95ec69;
+      color: #000;
+      border-top-right-radius: 2px;
+    }
+    .others .msg-bubble {
+      background: white;
+      color: #000;
+      border-top-left-radius: 2px;
+    }
+    .msg-img {
+      max-width: 200px;
+      max-height: 200px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .msg-audio audio { max-width: 180px; }
+    .chat-input-area {
+      padding: 0.5rem;
+      background: #f7f7f7;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      border-top: 1px solid #d9d9d9;
+    }
+    .icon-btn {
+      background: none;
+      border: none;
+      font-size: 1.6rem;
+      cursor: pointer;
+      padding: 0.2rem 0.4rem;
+      color: #555;
+    }
+    .chat-input {
+      flex: 1;
+      padding: 0.5rem 0.8rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      background: white;
+      outline: none;
+      font-size: 0.95rem;
+    }
+    /* 个人设置面板 */
+    .profile-panel {
+      position: fixed;
+      right: 0; top: 0;
+      width: 280px; height: 100%;
+      background: white;
+      box-shadow: -2px 0 15px rgba(0,0,0,0.1);
+      z-index: 300;
+      transform: translateX(100%);
+      transition: 0.3s;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      overflow-y: auto;
+    }
+    .profile-panel.open { transform: translateX(0); }
+    .profile-panel h3 { margin-bottom: 0.5rem; }
+    .profile-panel .input-field {
+      color: #333;
+      background: #f0f0f0;
+      border: 1px solid #ccc;
+    }
+    .menu-btn {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      display: none;
+    }
+    @media (max-width: 600px) {
+      .menu-btn { display: block; }
+    }
+  </style>
+</head>
+<body>
+  <!-- ========== 动画/登录阶段 ========== -->
+  <div id="stage">
+    <div id="text1" class="fade-text">你好</div>
+    <div id="text2" class="fade-text">欢迎你加入我们</div>
+    <div id="text3" class="fade-text">从现在起</div>
+    <div id="text4" class="fade-text">我们就是自己人了</div>
+    <div id="crazy-circle"></div>
+    <div id="colorTitle">从这里开始吧</div>
+    <div id="login-section">
+      <!-- 登录表单 -->
+      <div id="loginForm" style="width:100%; display:flex; flex-direction:column; align-items:center;">
+        <input type="text" id="loginUsername" class="input-field" placeholder="用户名" autocomplete="off">
+        <input type="password" id="loginPassword" class="input-field" placeholder="密码">
+        <button id="loginBtn" class="btn">登录</button>
+        <span class="link-text" id="goRegisterBtn">没有账号？立刻注册</span>
+      </div>
+      <!-- 注册表单 -->
+      <div id="registerForm" style="width:100%; display:none; flex-direction:column; align-items:center;">
+        <input type="text" id="regUsername" class="input-field" placeholder="设置用户名">
+        <input type="password" id="regPassword" class="input-field" placeholder="设置密码">
+        <button id="registerBtn" class="btn">注册</button>
+        <span class="link-text" id="goLoginBtn">← 返回登录</span>
+      </div>
+      <!-- 设置昵称 -->
+      <div id="nameSetup" style="width:100%; display:none; flex-direction:column; align-items:center;">
+        <div id="typingContainer" style="color:#333; font-size:1.3rem; min-height:2.2rem; margin-bottom:1rem; font-weight:500;"></div>
+        <input type="text" id="nicknameInput" class="input-field" placeholder="输入你的昵称" style="display:none;">
+        <button id="confirmNameBtn" class="btn" style="display:none;">下一步</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 微信聊天主界面 ========== -->
+  <div id="chat-app">
+    <div class="chat-header">
+      <button class="menu-btn" id="menuBtn">☰</button>
+      <span>🎪 马戏团群</span>
+      <div style="display:flex; gap:0.3rem;">
+        <button id="addFriendBtn" class="icon-btn" title="添加好友">👥</button>
+        <button id="createGroupBtn" class="icon-btn" title="创建群聊">➕</button>
+        <button id="profileBtn" class="icon-btn" title="个人中心">👤</button>
+      </div>
+    </div>
+    <div class="chat-body">
+      <div class="sidebar" id="sidebar">
+        <h4>好友</h4>
+        <div id="contactsList"></div>
+        <h4>群聊</h4>
+        <div id="groupsList"></div>
+      </div>
+      <div class="chat-area">
+        <div class="messages" id="messagesContainer"></div>
+        <div class="chat-input-area">
+          <input type="file" id="imageInput" accept="image/*" style="display:none;">
+          <button id="uploadImgBtn" class="icon-btn" title="图片">🖼️</button>
+          <button id="recordBtn" class="icon-btn" title="语音">🎤</button>
+          <input type="text" id="chatInput" class="chat-input" placeholder="输入消息...">
+          <button id="sendBtn" class="icon-btn" title="发送">📨</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 个人设置面板 -->
+  <div id="profilePanel" class="profile-panel">
+    <h3>账号管理</h3>
+    <input type="text" id="editNickname" class="input-field" placeholder="昵称">
+    <textarea id="editSignature" class="input-field" placeholder="个性签名" rows="2" style="resize:none;"></textarea>
+    <button id="changeAvatarBtn" class="btn" style="background:#f0f0f0; color:#333;">更换头像</button>
+    <button id="saveProfileBtn" class="btn">保存修改</button>
+    <button id="closeProfileBtn" class="btn" style="background:#f0f0f0; color:#333;">关闭</button>
+    <input type="file" id="avatarInput" accept="image/*" style="display:none;">
+  </div>
+
+  <script>
+    (function() {
+      const WS_URL = 'ws://localhost:8080';
+      let ws;
+      let currentUser = null;
+      let currentChat = { type: 'group', id: 'public', name: '大厅' };
+      let contacts = [];
+      let groups = [{ id: 'public', name: '大厅', members: [] }];
+      let messagesCache = {};
+
+      // 录音
+      let mediaRecorder, audioChunks = [], recording = false, recordTimer;
+
+      // ---------- 动画引擎 ----------
+      async function runAnimation() {
+        const stage = document.getElementById('stage');
+        const text1 = document.getElementById('text1');
+        const text2 = document.getElementById('text2');
+        const text3 = document.getElementById('text3');
+        const text4 = document.getElementById('text4');
+        const circle = document.getElementById('crazy-circle');
+        const colorTitle = document.getElementById('colorTitle');
+        const loginSection = document.getElementById('login-section');
+
+        function fadeIn(el, delay = 0) {
+          return new Promise(resolve => {
+            setTimeout(() => { el.style.opacity = '1'; resolve(); }, delay);
+          });
+        }
+
+        await fadeIn(text1, 400);
+        await new Promise(r => setTimeout(r, 1200));
+        await fadeIn(text2, 200);
+        await new Promise(r => setTimeout(r, 1200));
+        await fadeIn(text3, 200);
+        await new Promise(r => setTimeout(r, 1200));
+        await fadeIn(text4, 200);
+        await new Promise(r => setTimeout(r, 1500));
+
+        circle.style.opacity = '1';
+        await new Promise(r => setTimeout(r, 300));
+
+        const stageRect = stage.getBoundingClientRect();
+        const w = stageRect.width, h = stageRect.height;
+        const size = 60;
+        let x = (w-size)/2, y = (h-size)/2;
+        let dx = 10, dy = 7;
+        const corners = new Set();
+
+        await new Promise(resolve => {
+          function move() {
+            x += dx; y += dy;
+            if (x <= 0) { x = 0; dx = -dx; corners.add('left'); }
+            if (x + size >= w) { x = w - size; dx = -dx; corners.add('right'); }
+            if (y <= 0) { y = 0; dy = -dy; corners.add('top'); }
+            if (y + size >= h) { y = h - size; dy = -dy; corners.add('bottom'); }
+            circle.style.left = x + 'px';
+            circle.style.top = y + 'px';
+            if (corners.size >= 4) {
+              circle.style.transition = 'transform 0.8s ease, opacity 0.6s';
+              circle.style.transform = 'scale(30)';
+              circle.style.opacity = '0';
+              setTimeout(() => {
+                circle.style.display = 'none';
+                stage.style.background = 'white';
+                colorTitle.style.opacity = '1';
+                setTimeout(() => {
+                  colorTitle.style.top = '15%';
+                  colorTitle.style.transform = 'translate(-50%, 0)';
+                  loginSection.style.transform = 'translate(-50%, -50%) scale(1)';
+                }, 1000);
+                resolve();
+              }, 100);
+              return;
+            }
+            requestAnimationFrame(move);
+          }
+          move();
+        });
+      }
+
+      // ---------- WebSocket ----------
+      function connectWS() {
+        ws = new WebSocket(WS_URL);
+        ws.onopen = () => {
+          if (currentUser) ws.send(JSON.stringify({ type: 'auth', user: currentUser }));
+        };
+        ws.onmessage = (e) => {
+          try { handleMessage(JSON.parse(e.data)); } catch (err) {}
+        };
+        ws.onclose = () => setTimeout(connectWS, 2000);
+      }
+
+      function handleMessage(msg) {
+        if (msg.type === 'loginSuccess') {
+          currentUser = msg.user;
+          proceedAfterLogin();
+        } else if (msg.type === 'registerSuccess') {
+          alert('注册成功！请登录。');
+          showLoginForm();
+        } else if (msg.type === 'error') alert(msg.msg);
+        else if (msg.type === 'message') {
+          const chatId = msg.chatId || 'public';
+          if (!messagesCache[chatId]) messagesCache[chatId] = [];
+          messagesCache[chatId].push(msg);
+          if (currentChat.id === chatId) renderMessages();
+        } else if (msg.type === 'contacts') {
+          contacts = msg.contacts || [];
+          renderContacts();
+        } else if (msg.type === 'groups') {
+          groups = msg.groups || [{ id: 'public', name: '大厅' }];
+          renderGroups();
+        } else if (msg.type === 'userUpdate') {
+          if (currentUser && msg.user.username === currentUser.username) currentUser = msg.user;
+        }
+      }
+
+      function send(data) { if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(data)); }
+
+      // UI 切换
+      function showLoginForm() {
+        document.getElementById('loginForm').style.display = 'flex';
+        document.getElementById('registerForm').style.display = 'none';
+        document.getElementById('nameSetup').style.display = 'none';
+      }
+      function showRegisterForm() {
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('registerForm').style.display = 'flex';
+        document.getElementById('nameSetup').style.display = 'none';
+      }
+
+      document.getElementById('loginBtn').onclick = () => {
+        const u = document.getElementById('loginUsername').value.trim();
+        const p = document.getElementById('loginPassword').value.trim();
+        if (!u || !p) return alert('请填写完整');
+        send({ type: 'login', username: u, password: p });
+      };
+      document.getElementById('registerBtn').onclick = () => {
+        const u = document.getElementById('regUsername').value.trim();
+        const p = document.getElementById('regPassword').value.trim();
+        if (!u || !p) return alert('请填写完整');
+        send({ type: 'register', username: u, password: p });
+      };
+      document.getElementById('goRegisterBtn').onclick = showRegisterForm;
+      document.getElementById('goLoginBtn').onclick = showLoginForm;
+
+      // 登录后设置昵称
+      function proceedAfterLogin() {
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('registerForm').style.display = 'none';
+        document.getElementById('nameSetup').style.display = 'flex';
+        const typingDiv = document.getElementById('typingContainer');
+        typingDiv.innerHTML = '';
+        const prompt = '给你的账号取一个新名字吧';
+        let idx = 0;
+        const cursor = document.createElement('span');
+        cursor.style.borderRight = '2px solid #333';
+        cursor.style.animation = 'blink 0.8s infinite';
+        typingDiv.appendChild(cursor);
+        const style = document.createElement('style');
+        style.textContent = '@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}';
+        document.head.appendChild(style);
+        function typeChar() {
+          if (idx < prompt.length) {
+            typingDiv.insertBefore(document.createTextNode(prompt[idx++]), cursor);
+            setTimeout(typeChar, 80);
+          } else {
+            setTimeout(() => {
+              typingDiv.innerHTML = '';
+              document.getElementById('nicknameInput').style.display = 'block';
+              document.getElementById('confirmNameBtn').style.display = 'block';
+            }, 400);
+          }
+        }
+        typeChar();
+      }
+
+      document.getElementById('confirmNameBtn').onclick = () => {
+        const name = document.getElementById('nicknameInput').value.trim();
+        if (!name) return alert('昵称不能为空');
+        currentUser.nickname = name;
+        send({ type: 'updateProfile', user: currentUser });
+        enterChat();
+      };
+
+      function enterChat() {
+        document.getElementById('stage').style.display = 'none';
+        document.getElementById('chat-app').style.display = 'flex';
+        renderContacts(); renderGroups();
+        switchChat('public', '大厅');
+      }
+
+      window.switchChat = function(chatId, chatName, type = 'group') {
+        currentChat = { id: chatId, name: chatName, type };
+        document.getElementById('messagesContainer').innerHTML = '';
+        if (messagesCache[chatId]) renderMessages();
+        // 高亮
+        document.querySelectorAll('.contact-item, .group-item').forEach(el => el.classList.remove('active-chat'));
+        // 移动端关闭侧边栏
+        document.getElementById('sidebar').classList.remove('open');
+      };
+
+      function renderMessages() {
+        const container = document.getElementById('messagesContainer');
+        container.innerHTML = '';
+        const msgs = messagesCache[currentChat.id] || [];
+        msgs.forEach(m => {
+          const div = document.createElement('div');
+          div.className = `message ${m.from === currentUser.username ? 'mine' : 'others'}`;
+          if (m.type === 'text' || !m.imageData && !m.audioData) {
+            div.innerHTML = `<div class="msg-bubble"><b>${m.nickname||m.from}</b>: ${m.text || ''}</div>`;
+          } else if (m.imageData) {
+            div.innerHTML = `<div class="msg-bubble"><b>${m.nickname||m.from}</b>:<br><img src="${m.imageData}" class="msg-img" onclick="window.open('${m.imageData}')"/></div>`;
+          } else if (m.audioData) {
+            div.innerHTML = `<div class="msg-bubble"><b>${m.nickname||m.from}</b>:<br><audio controls src="${m.audioData}"></audio></div>`;
+          }
+          container.appendChild(div);
+        });
+        container.scrollTop = container.scrollHeight;
+      }
+
+      // 发送文字
+      document.getElementById('sendBtn').onclick = sendText;
+      document.getElementById('chatInput').onkeypress = (e) => { if (e.key==='Enter') sendText(); };
+      function sendText() {
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if (!text) return;
+        send({ type: 'message', chatId: currentChat.id, text, from: currentUser.username, nickname: currentUser.nickname });
+        input.value = '';
+      }
+
+      // 图片压缩上传
+      document.getElementById('uploadImgBtn').onclick = () => document.getElementById('imageInput').click();
+      document.getElementById('imageInput').onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        compressImage(file, 800, 0.7, blob => {
+          const reader = new FileReader();
+          reader.onload = () => send({ type: 'message', chatId: currentChat.id, imageData: reader.result, from: currentUser.username, nickname: currentUser.nickname });
+          reader.readAsDataURL(blob);
+        });
+        e.target.value = '';
+      };
+      function compressImage(file, maxW, quality, cb) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let w = img.width, h = img.height;
+            if (w > maxW) { h *= maxW/w; w = maxW; }
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            canvas.toBlob(cb, 'image/jpeg', quality);
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      // 语音录制
+      document.getElementById('recordBtn').onclick = async () => {
+        if (!recording) {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            mediaRecorder.onstop = () => {
+              const blob = new Blob(audioChunks, { type: 'audio/webm' });
+              const reader = new FileReader();
+              reader.onload = () => send({ type: 'message', chatId: currentChat.id, audioData: reader.result, from: currentUser.username, nickname: currentUser.nickname });
+              reader.readAsDataURL(blob);
+              stream.getTracks().forEach(t => t.stop());
+            };
+            mediaRecorder.start();
+            recording = true;
+            document.getElementById('recordBtn').textContent = '⏹️';
+            recordTimer = setTimeout(() => {
+              if (recording) { mediaRecorder.stop(); recording = false; document.getElementById('recordBtn').textContent = '🎤'; }
+            }, 40000);
+          } catch (err) { alert('无法访问麦克风'); }
+        } else {
+          mediaRecorder.stop(); recording = false;
+          clearTimeout(recordTimer);
+          document.getElementById('recordBtn').textContent = '🎤';
+        }
+      };
+
+      // 好友/群组渲染
+      function renderContacts() {
+        const list = document.getElementById('contactsList');
+        list.innerHTML = '';
+        contacts.forEach(c => {
+          const div = document.createElement('div');
+          div.className = 'contact-item';
+          div.innerHTML = `<div class="contact-avatar" style="background-image:url(${c.avatar || ''})"></div>${c.nickname || c.username}`;
+          div.onclick = () => switchChat(c.username, c.nickname, 'private');
+          list.appendChild(div);
+        });
+      }
+      function renderGroups() {
+        const list = document.getElementById('groupsList');
+        list.innerHTML = '';
+        groups.forEach(g => {
+          const div = document.createElement('div');
+          div.className = 'group-item';
+          div.innerHTML = `👥 ${g.name}`;
+          div.onclick = () => switchChat(g.id, g.name, 'group');
+          list.appendChild(div);
+        });
+      }
+
+      document.getElementById('addFriendBtn').onclick = () => {
+        const name = prompt('输入要添加的好友用户名:');
+        if (name) send({ type: 'addFriend', target: name });
+      };
+      document.getElementById('createGroupBtn').onclick = () => {
+        const name = prompt('输入群名称:');
+        if (name) send({ type: 'createGroup', groupName: name });
+      };
+
+      // 侧边栏移动端汉堡菜单
+      document.getElementById('menuBtn').onclick = () => {
+        document.getElementById('sidebar').classList.toggle('open');
+      };
+
+      // 个人面板
+      const profilePanel = document.getElementById('profilePanel');
+      document.getElementById('profileBtn').onclick = () => {
+        document.getElementById('editNickname').value = currentUser?.nickname || '';
+        document.getElementById('editSignature').value = currentUser?.signature || '';
+        profilePanel.classList.add('open');
+      };
+      document.getElementById('closeProfileBtn').onclick = () => profilePanel.classList.remove('open');
+      document.getElementById('saveProfileBtn').onclick = () => {
+        currentUser.nickname = document.getElementById('editNickname').value.trim();
+        currentUser.signature = document.getElementById('editSignature').value.trim();
+        send({ type: 'updateProfile', user: currentUser });
+        profilePanel.classList.remove('open');
+      };
+      document.getElementById('changeAvatarBtn').onclick = () => document.getElementById('avatarInput').click();
+      document.getElementById('avatarInput').onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        compressImage(file, 200, 0.5, blob => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            currentUser.avatar = reader.result;
+            send({ type: 'updateProfile', user: currentUser });
+          };
+          reader.readAsDataURL(blob);
+        });
+      };
+
+      window.addEventListener('load', () => {
+        runAnimation();
+        connectWS();
+      });
+    })();
+  </script>
+</body>
+</html>
