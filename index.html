@@ -21,11 +21,8 @@
       z-index: 100;
       transition: background 0.8s ease;
     }
-
     .fullscreen-text {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
       color: white;
       font-size: clamp(2.5rem, 8vw, 4rem);
       font-weight: 300;
@@ -38,268 +35,164 @@
       text-align: center;
       width: 100%;
     }
-
     #crazy-circle {
-      position: absolute;
-      width: 60px; height: 60px;
-      background: white;
-      border-radius: 50%;
-      opacity: 0;
-      box-shadow: 0 0 30px white;
-      pointer-events: none;
-      z-index: 10;
+      position: absolute; width: 60px; height: 60px;
+      background: white; border-radius: 50%; opacity: 0;
+      box-shadow: 0 0 30px white; pointer-events: none; z-index: 10;
     }
     #colorTitle {
-      font-size: clamp(2rem, 7vw, 3rem);
-      font-weight: 800;
+      font-size: clamp(2rem, 7vw, 3rem); font-weight: 800;
       background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
       filter: drop-shadow(0 0 12px rgba(255,255,255,0.5));
       transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-      text-align: center;
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      opacity: 0;
-      pointer-events: none;
-      white-space: nowrap;
+      text-align: center; position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%); opacity: 0; pointer-events: none; white-space: nowrap;
     }
     #login-section {
-      position: absolute;
-      top: 50%; left: 50%;
+      position: absolute; top: 50%; left: 50%;
       transform: translate(-50%, -50%) scale(0);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 90%;
-      max-width: 360px;
-      background: rgba(255,255,255,0.95);
-      backdrop-filter: blur(20px);
-      border-radius: 24px;
-      padding: 2rem 1.2rem;
+      display: flex; flex-direction: column; align-items: center;
+      width: 90%; max-width: 360px;
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(20px);
+      border-radius: 24px; padding: 2rem 1.2rem;
       box-shadow: 0 20px 40px rgba(0,0,0,0.15);
       z-index: 20;
       transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
     .input-field {
-      width: 100%;
-      padding: 0.85rem 1rem;
-      margin: 0.5rem 0;
-      border-radius: 12px;
-      border: 1px solid #ddd;
-      background: #f5f5f5;
-      color: #333;
-      font-size: 1rem;
-      outline: none;
+      width: 100%; padding: 0.85rem 1rem; margin: 0.5rem 0;
+      border-radius: 12px; border: 1px solid #ddd; background: #f5f5f5;
+      color: #333; font-size: 1rem; outline: none;
     }
     .input-field::placeholder { color: #999; }
     .btn {
-      background: #07c160;
-      color: white;
-      font-weight: 600;
-      padding: 0.8rem 2rem;
-      border-radius: 12px;
-      border: none;
-      margin-top: 1rem;
-      cursor: pointer;
-      font-size: 1rem;
-      width: 100%;
+      background: #07c160; color: white; font-weight: 600;
+      padding: 0.8rem 2rem; border-radius: 12px; border: none;
+      margin-top: 1rem; cursor: pointer; font-size: 1rem; width: 100%;
       transition: 0.2s;
     }
     .btn:active { transform: scale(0.97); }
     .link-text {
-      color: #333;
-      margin-top: 1rem;
-      font-size: 0.9rem;
-      cursor: pointer;
-      text-decoration: underline;
+      color: #333; margin-top: 1rem; font-size: 0.9rem;
+      cursor: pointer; text-decoration: underline;
     }
 
+    /* 聊天主界面 */
     #chat-app {
-      display: none;
-      width: 100%; height: 100%;
-      background: #ededed;
-      flex-direction: column;
-      position: fixed; top: 0; left: 0; z-index: 200;
+      display: none; width: 100%; height: 100%; background: #ededed;
+      flex-direction: column; position: fixed; top: 0; left: 0; z-index: 200;
     }
     .chat-header {
-      background: #ededed;
-      padding: 0.8rem 1rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid #d9d9d9;
-      color: #000;
-      font-weight: 500;
+      background: #ededed; padding: 0.8rem 1rem;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #d9d9d9; color: #000; font-weight: 500;
     }
-    .chat-body {
-      flex: 1;
-      display: flex;
-      overflow: hidden;
-      position: relative;
-    }
+    .header-left { display: flex; align-items: center; gap: 0.5rem; }
+    .online-count { font-size: 0.8rem; color: #07c160; }
+    .chat-body { flex: 1; display: flex; overflow: hidden; position: relative; }
     .sidebar {
-      width: 260px;
-      background: #f7f7f7;
-      border-right: 1px solid #d9d9d9;
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
+      width: 260px; background: #f7f7f7; border-right: 1px solid #d9d9d9;
+      display: flex; flex-direction: column; overflow-y: auto;
       transition: transform 0.25s ease;
     }
     @media (max-width: 600px) {
       .sidebar {
-        position: absolute;
-        left: 0; top: 0; bottom: 0;
-        z-index: 10;
-        transform: translateX(-100%);
-        width: 80%;
-        max-width: 280px;
+        position: absolute; left: 0; top: 0; bottom: 0; z-index: 10;
+        transform: translateX(-100%); width: 80%; max-width: 280px;
       }
       .sidebar.open { transform: translateX(0); }
     }
     .sidebar h4 {
-      padding: 0.8rem 1rem 0.3rem;
-      color: #666;
-      font-size: 0.8rem;
-      text-transform: uppercase;
+      padding: 0.8rem 1rem 0.3rem; color: #666;
+      font-size: 0.8rem; text-transform: uppercase;
     }
     .contact-item, .group-item {
-      padding: 0.8rem 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      cursor: pointer;
-      border-bottom: 1px solid #e6e6e6;
-      transition: background 0.1s;
+      padding: 0.8rem 1rem; display: flex; align-items: center; gap: 0.6rem;
+      cursor: pointer; border-bottom: 1px solid #e6e6e6; transition: background 0.1s;
     }
     .contact-item:active, .group-item:active { background: #d9d9d9; }
     .active-chat { background: #cacaca; }
     .contact-avatar {
-      width: 40px; height: 40px;
-      border-radius: 4px;
-      background: #ccc;
-      background-size: cover;
-      background-position: center;
+      width: 40px; height: 40px; border-radius: 4px; background: #ccc;
+      background-size: cover; background-position: center;
     }
-    .chat-area {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      background: #ededed;
+    .unread-badge {
+      background: red; color: white; border-radius: 50%; width: 18px; height: 18px;
+      font-size: 0.7rem; display: flex; align-items: center; justify-content: center;
+      margin-left: auto;
+    }
+    .chat-area { flex: 1; display: flex; flex-direction: column; background: #ededed; }
+    .announcement-bar {
+      background: #fef3c7; padding: 0.4rem 1rem; font-size: 0.8rem;
+      border-bottom: 1px solid #d9d9d9; display: flex; align-items: center;
+      justify-content: space-between;
     }
     .messages {
-      flex: 1;
-      padding: 0.8rem;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 0.8rem;
+      flex: 1; padding: 0.8rem; overflow-y: auto;
+      display: flex; flex-direction: column; gap: 0.8rem;
     }
-    .message {
-      display: flex;
-      flex-direction: column;
-      max-width: 75%;
-    }
-    .mine { align-self: flex-end; align-items: flex-end; }
+    .message { display: flex; max-width: 75%; }
+    .mine { align-self: flex-end; flex-direction: row-reverse; }
     .others { align-self: flex-start; }
+    .msg-avatar {
+      width: 32px; height: 32px; border-radius: 4px; margin: 0 0.4rem;
+      background: #ccc; background-size: cover; background-position: center;
+      flex-shrink: 0;
+    }
+    .mine .msg-avatar { display: none; }
+    .others .msg-avatar { display: block; }
     .msg-bubble {
-      padding: 0.6rem 0.8rem;
-      border-radius: 6px;
-      font-size: 0.95rem;
-      line-height: 1.4;
-      position: relative;
-      word-wrap: break-word;
+      padding: 0.6rem 0.8rem; border-radius: 6px; font-size: 0.95rem;
+      line-height: 1.4; position: relative; word-wrap: break-word;
       box-shadow: 0 1px 2px rgba(0,0,0,0.08);
     }
     .mine .msg-bubble {
-      background: #95ec69;
-      color: #000;
-      border-top-right-radius: 2px;
+      background: #95ec69; color: #000; border-top-right-radius: 2px;
     }
     .others .msg-bubble {
-      background: white;
-      color: #000;
-      border-top-left-radius: 2px;
+      background: white; color: #000; border-top-left-radius: 2px;
     }
-    .msg-img {
-      max-width: 200px;
-      max-height: 200px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .msg-audio audio { max-width: 180px; }
+    .msg-content { display: flex; flex-direction: column; }
+    .msg-sender { font-size: 0.75rem; color: #666; margin-bottom: 0.2rem; }
+    .msg-img, .msg-video { max-width: 200px; max-height: 200px; border-radius: 4px; cursor: pointer; }
     .chat-input-area {
-      padding: 0.5rem;
-      background: #f7f7f7;
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
+      padding: 0.5rem; background: #f7f7f7;
+      display: flex; align-items: center; gap: 0.3rem;
       border-top: 1px solid #d9d9d9;
     }
     .icon-btn {
-      background: none;
-      border: none;
-      font-size: 1.6rem;
-      cursor: pointer;
-      padding: 0.2rem 0.4rem;
-      color: #555;
+      background: none; border: none; font-size: 1.6rem; cursor: pointer;
+      padding: 0.2rem 0.4rem; color: #555;
     }
-    .icon-btn.recording {
-      color: red;
-      animation: pulse 1s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
+    .icon-btn.recording { color: red; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
     .chat-input {
-      flex: 1;
-      padding: 0.5rem 0.8rem;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      background: white;
-      outline: none;
-      font-size: 0.95rem;
+      flex: 1; padding: 0.5rem 0.8rem; border-radius: 6px;
+      border: 1px solid #ccc; background: white; outline: none; font-size: 0.95rem;
+    }
+    .emoji-panel {
+      position: absolute; bottom: 50px; left: 0; width: 100%;
+      background: white; border-top: 1px solid #d9d9d9; padding: 0.5rem;
+      display: flex; flex-wrap: wrap; gap: 0.5rem; z-index: 10;
+    }
+    .at-suggestions {
+      position: absolute; bottom: 50px; left: 0; width: 100%;
+      background: white; border-top: 1px solid #d9d9d9; max-height: 150px; overflow-y: auto;
     }
     .profile-panel {
-      position: fixed;
-      right: 0; top: 0;
-      width: 280px; height: 100%;
-      background: white;
-      box-shadow: -2px 0 15px rgba(0,0,0,0.1);
-      z-index: 300;
-      transform: translateX(100%);
-      transition: 0.3s;
-      padding: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.8rem;
-      overflow-y: auto;
+      position: fixed; right: 0; top: 0; width: 280px; height: 100%;
+      background: white; box-shadow: -2px 0 15px rgba(0,0,0,0.1);
+      z-index: 300; transform: translateX(100%); transition: 0.3s;
+      padding: 1.5rem; display: flex; flex-direction: column; gap: 0.8rem; overflow-y: auto;
     }
     .profile-panel.open { transform: translateX(0); }
-    .profile-panel h3 { margin-bottom: 0.5rem; }
-    .profile-panel .input-field {
-      color: #333;
-      background: #f0f0f0;
-      border: 1px solid #ccc;
-    }
-    .menu-btn {
-      background: none;
-      border: none;
-      font-size: 1.5rem;
-      cursor: pointer;
-      display: none;
-    }
-    @media (max-width: 600px) {
-      .menu-btn { display: block; }
-    }
+    .menu-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; display: none; }
+    @media (max-width: 600px) { .menu-btn { display: block; } }
   </style>
 </head>
 <body>
-  <!-- ========== 动画/登录阶段 ========== -->
   <div id="stage">
     <div id="fullscreenText" class="fullscreen-text"></div>
     <div id="crazy-circle"></div>
@@ -325,11 +218,13 @@
     </div>
   </div>
 
-  <!-- ========== 微信聊天主界面 ========== -->
   <div id="chat-app">
     <div class="chat-header">
-      <button class="menu-btn" id="menuBtn">☰</button>
-      <span>🎪 马戏团群</span>
+      <div class="header-left">
+        <button class="menu-btn" id="menuBtn">☰</button>
+        <span>🎪 马戏团群</span>
+        <span class="online-count" id="onlineCount">在线:0</span>
+      </div>
       <div style="display:flex; gap:0.3rem;">
         <button id="addFriendBtn" class="icon-btn" title="添加好友">👥</button>
         <button id="createGroupBtn" class="icon-btn" title="创建群聊">➕</button>
@@ -343,22 +238,34 @@
         <h4>群聊</h4>
         <div id="groupsList"></div>
       </div>
-      <div class="chat-area">
+      <div class="chat-area" id="chatArea">
+        <div class="announcement-bar" id="announcementBar" style="display:none;">
+          <span id="announcementText"></span>
+          <button id="editAnnouncementBtn" class="icon-btn" style="font-size:1rem;">✏️</button>
+        </div>
         <div class="messages" id="messagesContainer"></div>
         <div class="chat-input-area">
           <input type="file" id="imageInput" accept="image/*" style="display:none;">
+          <input type="file" id="videoInput" accept="video/*" style="display:none;">
+          <button id="emojiBtn" class="icon-btn" title="表情">😀</button>
           <button id="uploadImgBtn" class="icon-btn" title="图片">🖼️</button>
+          <button id="videoBtn" class="icon-btn" title="视频">📹</button>
           <button id="recordBtn" class="icon-btn" title="语音">🎤</button>
           <input type="text" id="chatInput" class="chat-input" placeholder="输入消息...">
           <button id="sendBtn" class="icon-btn" title="发送">📨</button>
         </div>
+        <div id="emojiPanel" class="emoji-panel" style="display:none;">
+          <input type="file" id="emojiUpload" accept="image/gif,image/png,image/jpeg">
+          <div id="emojiList" style="display:flex; flex-wrap:wrap; gap:0.3rem;"></div>
+        </div>
+        <div id="atSuggestions" class="at-suggestions" style="display:none;"></div>
       </div>
     </div>
   </div>
 
-  <!-- ========== 个人设置面板 ========== -->
   <div id="profilePanel" class="profile-panel">
     <h3>账号管理</h3>
+    <div>UID: <span id="profileUid"></span></div>
     <input type="text" id="editNickname" class="input-field" placeholder="昵称">
     <textarea id="editSignature" class="input-field" placeholder="个性签名" rows="2" style="resize:none;"></textarea>
     <button id="changeAvatarBtn" class="btn" style="background:#f0f0f0; color:#333;">更换头像</button>
@@ -369,23 +276,16 @@
 
   <script>
     (function() {
-      // ★★★ 你的 Railway 域名 ★★★
       const WS_URL = 'wss://circus-production-8c6f.up.railway.app';
-      let ws;
-      let currentUser = null;
+      let ws, currentUser = null;
       let currentChat = { type: 'group', id: 'public', name: '大厅' };
-      let contacts = [];
-      let groups = [{ id: 'public', name: '大厅', members: [] }];
+      let contacts = [], groups = [{ id: 'public', name: '大厅', announcement: '' }];
       let messagesCache = {};
 
-      // ========== 录音 ==========
-      let mediaRecorder = null;
-      let audioChunks = [];
-      let recording = false;
-      let recordTimer = null;
-      let audioStream = null;
+      // 录音相关
+      let mediaRecorder, audioChunks = [], recording = false, recordTimer, audioStream;
 
-      // ========== 动画引擎 ==========
+      // ========== 动画 ==========
       async function runAnimation() {
         const fullText = document.getElementById('fullscreenText');
         const circle = document.getElementById('crazy-circle');
@@ -394,7 +294,6 @@
         const stage = document.getElementById('stage');
 
         const sentences = ["你好", "欢迎你加入我们", "从现在起", "我们就是自己人了"];
-
         for (let i = 0; i < sentences.length; i++) {
           fullText.textContent = sentences[i];
           fullText.style.opacity = '1';
@@ -405,7 +304,6 @@
 
         circle.style.opacity = '1';
         await new Promise(r => setTimeout(r, 300));
-
         const stageRect = stage.getBoundingClientRect();
         const w = stageRect.width, h = stageRect.height;
         const size = 60;
@@ -449,16 +347,12 @@
       function connectWS() {
         ws = new WebSocket(WS_URL);
         ws.onopen = () => {
-          console.log('WebSocket 已连接');
           if (currentUser) ws.send(JSON.stringify({ type: 'auth', user: currentUser }));
         };
         ws.onmessage = (e) => {
           try { handleMessage(JSON.parse(e.data)); } catch (err) {}
         };
-        ws.onclose = () => {
-          console.log('WebSocket 断开，2秒后重连');
-          setTimeout(connectWS, 2000);
-        };
+        ws.onclose = () => setTimeout(connectWS, 2000);
       }
 
       function handleMessage(msg) {
@@ -477,27 +371,47 @@
           const chatId = msg.chatId || 'public';
           if (!messagesCache[chatId]) messagesCache[chatId] = [];
           messagesCache[chatId].push(msg);
-          if (currentChat.id === chatId) renderMessages();
+          if (currentChat.id === chatId) {
+            renderMessages();
+            // 标记已读
+            ws.send(JSON.stringify({ type: 'markRead', chatId, lastMsgId: msg.msgId }));
+          }
         } else if (msg.type === 'contacts') {
           contacts = msg.contacts || [];
           renderContacts();
         } else if (msg.type === 'groups') {
-          groups = msg.groups || [{ id: 'public', name: '大厅' }];
+          groups = msg.groups || [{ id: 'public', name: '大厅', announcement: '' }];
           renderGroups();
-        } else if (msg.type === 'userUpdate') {
-          if (currentUser && msg.user.username === currentUser.username) {
-            currentUser = msg.user;
+        } else if (msg.type === 'userUpdate' && currentUser && msg.user.username === currentUser.username) {
+          currentUser = msg.user;
+        } else if (msg.type === 'onlineCount') {
+          document.getElementById('onlineCount').textContent = `在线:${msg.count}`;
+        } else if (msg.type === 'announcementUpdated') {
+          if (currentChat.id === msg.groupId) {
+            document.getElementById('announcementText').textContent = msg.announcement;
+            document.getElementById('announcementBar').style.display = msg.announcement ? 'flex' : 'none';
           }
+          // 更新groups信息
+          const g = groups.find(g => g.id === msg.groupId);
+          if (g) g.announcement = msg.announcement;
+        } else if (msg.type === 'unreadCount') {
+          // 可以更新列表里的未读红点，暂不实现
+        } else if (msg.type === 'notification') {
+          alert(msg.msg); // 简化@提醒
+        } else if (msg.type === 'emojis') {
+          renderEmojiList(msg.emojis);
+        } else if (msg.type === 'emojiAdded') {
+          // 重新获取表情
+          ws.send(JSON.stringify({ type: 'getEmojis' }));
+        } else if (msg.type === 'success') {
+          alert(msg.msg);
         }
       }
 
       function send(data) {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify(data));
-        }
+        if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(data));
       }
 
-      // UI 切换
       function showLoginForm() {
         document.getElementById('loginForm').style.display = 'flex';
         document.getElementById('registerForm').style.display = 'none';
@@ -567,6 +481,7 @@
         document.getElementById('chat-app').style.display = 'flex';
         renderContacts(); renderGroups();
         switchChat('public', '大厅');
+        ws.send(JSON.stringify({ type: 'getEmojis' }));
       }
 
       window.switchChat = function(chatId, chatName, type = 'group') {
@@ -579,6 +494,15 @@
         }
         document.querySelectorAll('.contact-item, .group-item').forEach(el => el.classList.remove('active-chat'));
         document.getElementById('sidebar').classList.remove('open');
+
+        // 显示当前群公告
+        const group = groups.find(g => g.id === chatId);
+        if (group && group.announcement) {
+          document.getElementById('announcementText').textContent = group.announcement;
+          document.getElementById('announcementBar').style.display = 'flex';
+        } else {
+          document.getElementById('announcementBar').style.display = 'none';
+        }
       };
 
       function renderMessages() {
@@ -588,13 +512,31 @@
         msgs.forEach(m => {
           const div = document.createElement('div');
           div.className = `message ${m.from === currentUser.username ? 'mine' : 'others'}`;
-          if (m.msgType === 'text' || (!m.imageData && !m.audioData)) {
-            div.innerHTML = `<div class="msg-bubble"><b>${m.nickname||m.from}</b>: ${m.text || ''}</div>`;
+
+          const avatarEl = document.createElement('div');
+          avatarEl.className = 'msg-avatar';
+          avatarEl.style.backgroundImage = `url(${m.avatar || ''})`;
+
+          const bubble = document.createElement('div');
+          bubble.className = 'msg-bubble';
+
+          const content = document.createElement('div');
+          content.className = 'msg-content';
+          content.innerHTML = `<span class="msg-sender">${m.nickname || m.from}</span>`;
+
+          if (m.msgType === 'text' || (!m.imageData && !m.audioData && !m.videoData)) {
+            content.innerHTML += `<span class="msg-text">${m.text || ''}</span>`;
           } else if (m.msgType === 'image' || m.imageData) {
-            div.innerHTML = `<div class="msg-bubble"><b>${m.nickname||m.from}</b>:<br><img src="${m.imageData}" class="msg-img" onclick="window.open('${m.imageData}')"/></div>`;
+            content.innerHTML += `<img src="${m.imageData}" class="msg-img" onclick="window.open('${m.imageData}')" />`;
           } else if (m.msgType === 'audio' || m.audioData) {
-            div.innerHTML = `<div class="msg-bubble"><b>${m.nickname||m.from}</b>:<br><audio controls src="${m.audioData}"></audio></div>`;
+            content.innerHTML += `<audio controls src="${m.audioData}"></audio>`;
+          } else if (m.msgType === 'video' || m.videoData) {
+            content.innerHTML += `<video controls src="${m.videoData}" class="msg-video"></video>`;
           }
+
+          bubble.appendChild(content);
+          div.appendChild(avatarEl);
+          div.appendChild(bubble);
           container.appendChild(div);
         });
         container.scrollTop = container.scrollHeight;
@@ -607,8 +549,15 @@
         const input = document.getElementById('chatInput');
         const text = input.value.trim();
         if (!text) return;
-        send({ type: 'message', chatId: currentChat.id, text, from: currentUser.username, nickname: currentUser.nickname });
+        send({
+          type: 'message',
+          chatId: currentChat.id,
+          text,
+          from: currentUser.username,
+          nickname: currentUser.nickname
+        });
         input.value = '';
+        document.getElementById('atSuggestions').style.display = 'none';
       }
 
       // 图片上传
@@ -618,13 +567,24 @@
         if (!file) return;
         compressImage(file, 800, 0.7, blob => {
           const reader = new FileReader();
-          reader.onload = () => {
-            send({ type: 'message', chatId: currentChat.id, imageData: reader.result, from: currentUser.username, nickname: currentUser.nickname });
-          };
+          reader.onload = () => send({ type: 'message', chatId: currentChat.id, imageData: reader.result });
           reader.readAsDataURL(blob);
         });
         e.target.value = '';
       };
+
+      // 视频上传
+      document.getElementById('videoBtn').onclick = () => document.getElementById('videoInput').click();
+      document.getElementById('videoInput').onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 20 * 1024 * 1024) { alert('视频不能超过20MB'); return; }
+        const reader = new FileReader();
+        reader.onload = () => send({ type: 'message', chatId: currentChat.id, videoData: reader.result });
+        reader.readAsDataURL(file);
+        e.target.value = '';
+      };
+
       function compressImage(file, maxW, quality, cb) {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -642,142 +602,135 @@
         reader.readAsDataURL(file);
       }
 
-      // ========== ★★★ 录音（修复版） ★★★ ==========
+      // 语音（已修复）
       document.getElementById('recordBtn').onclick = async () => {
         const btn = document.getElementById('recordBtn');
-
         if (!recording) {
-          // 开始录音
           try {
-            console.log('🎤 请求麦克风权限...');
             audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            console.log('✅ 麦克风权限已获取');
-
-            // 检查支持的 MIME 类型
             let mimeType = 'audio/webm';
             if (!MediaRecorder.isTypeSupported('audio/webm')) {
-              if (MediaRecorder.isTypeSupported('audio/mp4')) {
-                mimeType = 'audio/mp4';
-              } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
-                mimeType = 'audio/ogg';
-              }
+              if (MediaRecorder.isTypeSupported('audio/mp4')) mimeType = 'audio/mp4';
+              else if (MediaRecorder.isTypeSupported('audio/ogg')) mimeType = 'audio/ogg';
             }
-            console.log('📼 使用 MIME 类型:', mimeType);
-
-            mediaRecorder = new MediaRecorder(audioStream, {
-              mimeType: mimeType,
-              audioBitsPerSecond: 64000
-            });
-
+            mediaRecorder = new MediaRecorder(audioStream, { mimeType, audioBitsPerSecond: 64000 });
             audioChunks = [];
-
-            mediaRecorder.ondataavailable = (e) => {
-              if (e.data.size > 0) {
-                audioChunks.push(e.data);
-                console.log('📦 音频数据块:', e.data.size, 'bytes');
-              }
-            };
-
-            mediaRecorder.onstart = () => {
-              console.log('🔴 录音开始');
-            };
-
+            mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.push(e.data); };
             mediaRecorder.onstop = () => {
-              console.log('⏹️ 录音停止，数据块数量:', audioChunks.length);
-
-              if (audioChunks.length === 0) {
-                alert('录音数据为空，请重试');
-                return;
-              }
-
+              if (audioChunks.length === 0) return;
               const blob = new Blob(audioChunks, { type: mimeType });
-              console.log('📁 录音文件大小:', blob.size, 'bytes');
-
               const reader = new FileReader();
-              reader.onload = () => {
-                console.log('📤 发送录音数据...');
-                send({
-                  type: 'message',
-                  chatId: currentChat.id,
-                  audioData: reader.result,
-                  from: currentUser.username,
-                  nickname: currentUser.nickname
-                });
-              };
-              reader.onerror = () => {
-                console.error('读取录音文件失败');
-                alert('录音处理失败，请重试');
-              };
+              reader.onload = () => send({ type: 'message', chatId: currentChat.id, audioData: reader.result });
               reader.readAsDataURL(blob);
-
-              // 释放麦克风
-              if (audioStream) {
-                audioStream.getTracks().forEach(track => track.stop());
-                audioStream = null;
-              }
+              if (audioStream) { audioStream.getTracks().forEach(t => t.stop()); audioStream = null; }
             };
-
-            mediaRecorder.onerror = (err) => {
-              console.error('MediaRecorder 错误:', err);
-              alert('录音失败: ' + err.message);
-              stopRecordingUI();
-            };
-
-            // 开始录制
-            mediaRecorder.start(100); // 每 100ms 收集一次数据
+            mediaRecorder.start(100);
             recording = true;
             btn.textContent = '⏹️';
             btn.classList.add('recording');
-            console.log('🎙️ 录音中...');
-
-            // 40 秒自动停止
             recordTimer = setTimeout(() => {
-              if (recording && mediaRecorder && mediaRecorder.state === 'recording') {
-                console.log('⏰ 40秒限制，自动停止');
+              if (recording && mediaRecorder.state === 'recording') {
                 mediaRecorder.stop();
-                recording = false;
-                btn.textContent = '🎤';
-                btn.classList.remove('recording');
-                clearTimeout(recordTimer);
+                stopRecordingUI();
               }
             }, 40000);
-
           } catch (err) {
-            console.error('获取麦克风失败:', err);
-            if (err.name === 'NotAllowedError') {
-              alert('麦克风权限被拒绝，请在浏览器设置中允许访问麦克风');
-            } else if (err.name === 'NotFoundError') {
-              alert('未检测到麦克风设备');
-            } else {
-              alert('无法访问麦克风: ' + err.message);
-            }
+            alert('麦克风权限被拒绝');
             stopRecordingUI();
           }
         } else {
-          // 停止录音
-          console.log('🛑 手动停止录音');
-          if (mediaRecorder && mediaRecorder.state === 'recording') {
-            mediaRecorder.stop();
-          }
+          if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
           stopRecordingUI();
         }
       };
-
       function stopRecordingUI() {
         recording = false;
         if (recordTimer) clearTimeout(recordTimer);
-        document.getElementById('recordBtn').textContent = '🎤';
-        document.getElementById('recordBtn').classList.remove('recording');
+        const btn = document.getElementById('recordBtn');
+        btn.textContent = '🎤';
+        btn.classList.remove('recording');
       }
 
-      // 好友/群组渲染
+      // 表情面板
+      document.getElementById('emojiBtn').onclick = () => {
+        const panel = document.getElementById('emojiPanel');
+        panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+      };
+      document.getElementById('emojiUpload').onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          const url = reader.result;
+          const shortcut = prompt('输入快捷触发词 (留空则只显示在面板):');
+          send({ type: 'addEmoji', url, shortcut: shortcut || '' });
+        };
+        reader.readAsDataURL(file);
+        e.target.value = '';
+      };
+      function renderEmojiList(emojis) {
+        const list = document.getElementById('emojiList');
+        list.innerHTML = '';
+        emojis.forEach(e => {
+          const img = document.createElement('img');
+          img.src = e.url;
+          img.style.width = '30px'; img.style.height = '30px'; img.style.cursor = 'pointer';
+          img.onclick = () => {
+            document.getElementById('chatInput').value += ` [emoji:${e.url}] `;
+            document.getElementById('emojiPanel').style.display = 'none';
+          };
+          list.appendChild(img);
+        });
+      }
+
+      // @提醒建议
+      document.getElementById('chatInput').addEventListener('input', function(e) {
+        const val = e.target.value;
+        const lastAt = val.lastIndexOf('@');
+        if (lastAt !== -1 && (lastAt === 0 || val[lastAt-1] === ' ')) {
+          const query = val.slice(lastAt+1).toLowerCase();
+          const suggestions = contacts.filter(c => c.username.toLowerCase().includes(query));
+          const div = document.getElementById('atSuggestions');
+          if (suggestions.length) {
+            div.innerHTML = '';
+            suggestions.forEach(c => {
+              const btn = document.createElement('button');
+              btn.textContent = c.nickname || c.username;
+              btn.onclick = () => {
+                const input = document.getElementById('chatInput');
+                input.value = val.slice(0, lastAt+1) + c.username + ' ';
+                div.style.display = 'none';
+                input.focus();
+              };
+              div.appendChild(btn);
+            });
+            div.style.display = 'block';
+          } else {
+            div.style.display = 'none';
+          }
+        } else {
+          document.getElementById('atSuggestions').style.display = 'none';
+        }
+      });
+
+      // 群公告编辑
+      document.getElementById('editAnnouncementBtn').onclick = () => {
+        const group = groups.find(g => g.id === currentChat.id);
+        if (!group) return;
+        const text = prompt('编辑群公告:', group.announcement || '');
+        if (text !== null) {
+          send({ type: 'updateAnnouncement', groupId: currentChat.id, announcement: text });
+        }
+      };
+
+      // 好友和群列表渲染
       function renderContacts() {
         const list = document.getElementById('contactsList');
         list.innerHTML = '';
         contacts.forEach(c => {
           const div = document.createElement('div');
           div.className = 'contact-item';
-          div.innerHTML = `<div class="contact-avatar" style="background-image:url(${c.avatar || ''})"></div>${c.nickname || c.username}`;
+          div.innerHTML = `<div class="contact-avatar" style="background-image:url(${c.avatar || ''})"></div>${c.nickname || c.username} <span style="font-size:0.7rem;color:#999;">UID:${c.uid}</span>`;
           div.onclick = () => switchChat(c.username, c.nickname, 'private');
           list.appendChild(div);
         });
@@ -788,15 +741,16 @@
         groups.forEach(g => {
           const div = document.createElement('div');
           div.className = 'group-item';
-          div.innerHTML = `👥 ${g.name}`;
+          div.innerHTML = `👥 ${g.name} <span style="font-size:0.7rem;color:#999;">ID:${g.id}</span>`;
           div.onclick = () => switchChat(g.id, g.name, 'group');
           list.appendChild(div);
         });
       }
 
+      // 添加好友（支持UID）
       document.getElementById('addFriendBtn').onclick = () => {
-        const name = prompt('输入要添加的好友用户名:');
-        if (name) send({ type: 'addFriend', target: name });
+        const target = prompt('输入好友用户名或UID:');
+        if (target) send({ type: 'addFriend', target });
       };
       document.getElementById('createGroupBtn').onclick = () => {
         const name = prompt('输入群名称:');
@@ -809,6 +763,7 @@
       // 个人面板
       const profilePanel = document.getElementById('profilePanel');
       document.getElementById('profileBtn').onclick = () => {
+        document.getElementById('profileUid').textContent = currentUser?.uid || '';
         document.getElementById('editNickname').value = currentUser?.nickname || '';
         document.getElementById('editSignature').value = currentUser?.signature || '';
         profilePanel.classList.add('open');
