@@ -1,8 +1,8 @@
 const http = require('http');
+const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const { WebSocketServer } = require('ws');
-const https = require('https');
 
 const PORT = process.env.PORT || 8080;
 const DATA_DIR = path.join(__dirname, 'data');
@@ -46,31 +46,21 @@ setInterval(() => {
 
 // ========== 天气模块（修复版） ==========
 const cityCodeMap = {
-  // 华北
   "北京":"101010100","天津":"101030100","石家庄":"101090101","太原":"101100101","呼和浩特":"101080101",
-  // 东北
   "沈阳":"101070101","大连":"101070201","长春":"101060101","哈尔滨":"101050101",
-  // 华东
   "上海":"101020100","南京":"101190101","杭州":"101210101","合肥":"101220101","福州":"101230101",
   "厦门":"101230201","南昌":"101240101","济南":"101120101","青岛":"101120201",
-  // 中南
   "郑州":"101180101","武汉":"101200101","长沙":"101250101","广州":"101280101","深圳":"101280601",
   "南宁":"101300101","海口":"101310101",
-  // 西南
   "重庆":"101040100","成都":"101270101","贵阳":"101260101","昆明":"101290101","拉萨":"101140101",
-  // 西北
   "西安":"101110101","兰州":"101160101","西宁":"101150101","银川":"101170101","乌鲁木齐":"101130101",
-  // 河北部分城市
   "邢台":"101090901","邯郸":"101091001","保定":"101090201","唐山":"101090501",
-  // 其他常见
   "苏州":"101190401","无锡":"101190201","宁波":"101210401","温州":"101210701",
   "东莞":"101281601","佛山":"101280601","珠海":"101280701"
 };
 
 function getWeatherCode(city) {
-  // 直接匹配
   if (cityCodeMap[city]) return cityCodeMap[city];
-  // 省份兜底：如果城市名包含省的关键词，尝试用省会
   const provinceMap = {
     "北京":"北京","天津":"天津","上海":"上海","重庆":"重庆",
     "河北":"石家庄","山西":"太原","内蒙古":"呼和浩特",
@@ -80,11 +70,8 @@ function getWeatherCode(city) {
     "四川":"成都","贵州":"贵阳","云南":"昆明","西藏":"拉萨",
     "陕西":"西安","甘肃":"兰州","青海":"西宁","宁夏":"银川","新疆":"乌鲁木齐"
   };
-  // 检查city是否包含省份名
   for (const [province, capital] of Object.entries(provinceMap)) {
-    if (city.includes(province)) {
-      return cityCodeMap[capital] || null;
-    }
+    if (city.includes(province)) return cityCodeMap[capital] || null;
   }
   return null;
 }
@@ -92,7 +79,7 @@ function getWeatherCode(city) {
 function fetchWeather(cityCode) {
   return new Promise((resolve, reject) => {
     const url = `https://d1.weather.com.cn/sk_2d/${cityCode}.html`;
-    https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' } }, (res) => {
+    https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (res) => {
       let raw = '';
       res.on('data', chunk => raw += chunk);
       res.on('end', () => {
@@ -109,9 +96,21 @@ function fetchWeather(cityCode) {
             aqiLevel: data.aqiLevel,
             time: data.time
           });
-        } catch (e) {
-          reject(e);
-        }
+        } catch (e) { reject(e); }
+      });
+    }).on('error', reject);
+  });
+}
+
+// 使用 http 模块获取 IP 定位（ip-api.com 免费 HTTP）
+function getIpLocation(ip) {
+  return new Promise((resolve, reject) => {
+    const url = `http://ip-api.com/json/${ip}?lang=zh-CN`;
+    http.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (res) => {
+      let raw = '';
+      res.on('data', chunk => raw += chunk);
+      res.on('end', () => {
+        try { resolve(JSON.parse(raw)); } catch (e) { reject(e); }
       });
     }).on('error', reject);
   });
@@ -119,14 +118,7 @@ function fetchWeather(cityCode) {
 
 async function getClientWeather(ip) {
   try {
-    // 使用 ip-api.com 免费接口，返回中文城市
-    const locData = await new Promise((resolve, reject) => {
-      https.get(`http://ip-api.com/json/${ip}?lang=zh-CN`, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (res) => {
-        let raw = '';
-        res.on('data', c => raw += c);
-        res.on('end', () => { try { resolve(JSON.parse(raw)); } catch (e) { reject(e); } });
-      }).on('error', reject);
-    });
+    const locData = await getIpLocation(ip);
     const city = locData.city;
     console.log('定位城市:', city);
     if (!city) return null;
@@ -170,13 +162,7 @@ wss.on('connection', (ws, req) => {
         ws.send(JSON.stringify({ type: 'error', msg: '用户名已存在' }));
         return;
       }
-      users[msg.username] = {
-        password: msg.password,
-        nickname: msg.username,
-        avatar: '',
-        signature: '',
-        uid: nextUid++
-      };
+      users[msg.username] = { password: msg.password, nickname: msg.username, avatar: '', signature: '', uid: nextUid++ };
       ws.send(JSON.stringify({ type: 'registerSuccess' }));
     }
     else if (msg.type === 'login') {
